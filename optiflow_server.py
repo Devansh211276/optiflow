@@ -9,7 +9,12 @@ import sys
 import json
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
 
 # Ensure local imports work whether executed directly or as a package
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -719,14 +724,46 @@ class OptiFlowHandler(BaseHTTPRequestHandler):
                 "top_processes": processes
             }
             self._set_json_headers(200)
-            self.wfile.write(json.dumps(data).encode('utf-8'))
+        elif parsed.path == '/ece' or parsed.path == '/ece/':
+            ece_html_path = os.path.abspath(os.path.join(CURRENT_DIR, "..", "ece_agent", "index.html"))
+            if os.path.exists(ece_html_path):
+                with open(ece_html_path, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Cache-Control', 'no-cache')
+                self.end_headers()
+                self.wfile.write(content)
+            else:
+                self.send_response(404)
+                self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path == '/api/boost':
+        if parsed.path == '/api/ece/solve':
+            content_len = int(self.headers.get('Content-Length', 0))
+            post_body = self.rfile.read(content_len) if content_len > 0 else b'{}'
+            try:
+                data = json.loads(post_body.decode('utf-8'))
+                query = data.get('query', '')
+            except Exception:
+                query = ''
+            try:
+                ece_path = os.path.abspath(os.path.join(CURRENT_DIR, "..", "ece_agent"))
+                if ece_path not in sys.path:
+                    sys.path.insert(0, ece_path)
+                import ece_engine
+                result = ece_engine.process_voice_command(query)
+            except Exception as e:
+                result = {"title": "Error", "spoken": f"Error: {e}", "steps": [str(e)]}
+
+            self._set_json_headers(200)
+            self.wfile.write(json.dumps(result).encode('utf-8'))
+
+        elif parsed.path == '/api/boost':
             opt_mem = optimize_idle_memory(skip_foreground=True)
             boost_procs = boost_dev_flow()
             daemon_instance.total_ram_reclaimed_mb += opt_mem["recovered_mb"]
@@ -784,10 +821,11 @@ def run_server(port=5050):
     except Exception:
         pass
 
-    server_address = ('127.0.0.1', port)
-    httpd = HTTPServer(server_address, OptiFlowHandler)
+    server_address = ('0.0.0.0', port)
+    httpd = ThreadedHTTPServer(server_address, OptiFlowHandler)
     print(f"\n=======================================================")
-    print(f">> OptiFlow Server running at: http://localhost:{port}")
+    print(f">> OptiFlow Server running at: http://127.0.0.1:{port}")
+    print(f">> ECE Voice Agent mounted at: http://127.0.0.1:{port}/ece")
     print(f">> Background Guardian Daemon is active.")
     print(f"=======================================================\n")
     
