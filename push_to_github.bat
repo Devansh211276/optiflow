@@ -8,12 +8,9 @@ echo.
 echo Make sure you have created an empty repository on GitHub:
 echo https://github.com/new (Name: optiflow)
 echo.
-set /p REPO_URL="Enter your GitHub Repository URL (e.g., https://github.com/USERNAME/optiflow.git): "
-if "%REPO_URL%"=="" (
-    echo [!] No repository URL entered. Exiting.
-    pause
-    exit /b
-)
+set DEFAULT_URL=https://github.com/Devansh211276/optiflow.git
+set /p REPO_URL="Enter GitHub Repository URL [%DEFAULT_URL%]: "
+if "%REPO_URL%"=="" set REPO_URL=%DEFAULT_URL%
 echo.
 echo [*] Configuring remote origin: %REPO_URL%
 git remote remove origin 2>nul
