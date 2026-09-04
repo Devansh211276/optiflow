@@ -25,5 +25,5 @@ optiflow = "optiflow.optiflow_server:run_server"
 optiflow-daemon = "optiflow.optiflow_daemon:daemon_instance.start"
 
 [project.urls]
-"Homepage" = "https://github.com/DevanshGanatra/optiflow"
-"Bug Tracker" = "https://github.com/DevanshGanatra/optiflow/issues"
+"Homepage" = "https://github.com/Devansh211276/optiflow"
+"Bug Tracker" = "https://github.com/Devansh211276/optiflow/issues"
