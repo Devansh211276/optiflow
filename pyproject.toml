@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "optiflow-guardian"
+version = "1.0.0"
+authors = [
+  { name="Devansh Ganatra", email="devanshganatra1012@gmail.com" },
+]
+description = "Autonomous Windows System Optimizer & Flow Guardian for hybrid architectures and RAM optimization"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Monitoring",
+]
+dependencies = []
+
+[project.scripts]
+optiflow = "optiflow.optiflow_server:run_server"
+optiflow-daemon = "optiflow.optiflow_daemon:daemon_instance.start"
+
+[project.urls]
+"Homepage" = "https://github.com/DevanshGanatra/optiflow"
+"Bug Tracker" = "https://github.com/DevanshGanatra/optiflow/issues"
