@@ -763,6 +763,23 @@ class OptiFlowHandler(BaseHTTPRequestHandler):
             self._set_json_headers(200)
             self.wfile.write(json.dumps(result).encode('utf-8'))
 
+        elif parsed.path == '/api/ece/set_key':
+            content_len = int(self.headers.get('Content-Length', 0))
+            post_body = self.rfile.read(content_len) if content_len > 0 else b'{}'
+            try:
+                data = json.loads(post_body.decode('utf-8'))
+                key = data.get('key', '')
+                ece_path = os.path.abspath(os.path.join(CURRENT_DIR, "..", "ece_agent"))
+                if ece_path not in sys.path:
+                    sys.path.insert(0, ece_path)
+                import ece_engine
+                ece_engine.set_api_key(key)
+                self._set_json_headers(200)
+                self.wfile.write(json.dumps({"success": True, "has_key": bool(key)}).encode('utf-8'))
+            except Exception as e:
+                self._set_json_headers(500)
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+
         elif parsed.path == '/api/boost':
             opt_mem = optimize_idle_memory(skip_foreground=True)
             boost_procs = boost_dev_flow()
